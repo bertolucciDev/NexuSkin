@@ -36,8 +36,8 @@ jobs:
 
       - name: Locate JAR
         id: jar
-        working-directory: agent
-        run: echo "jar=$(find build/libs -name 'nxagent.jar' | head -n1)" >> $GITHUB_OUTPUT
+        run: |
+          echo "jar=$(find agent/build/libs -name 'nxagent.jar' | head -n1)" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
