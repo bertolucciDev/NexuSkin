@@ -29,8 +29,10 @@ jobs:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Run build
-        working-directory: agent
-        run: gradle shadowJar --no-daemon
+        run: |
+          cd agent
+          chmod +x gradlew || true
+          ./gradlew shadowJar --no-daemon
 
       - name: Locate JAR
         id: jar
