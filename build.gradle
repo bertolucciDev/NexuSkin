@@ -41,6 +41,10 @@ jar {
 // Vamos criar uma tarefa simples de "fatjar" manualmente.
 task fatJar(type: Jar) {
     archiveFileName = 'nxagent.jar'
+    
+    // SOLUÇÃO PARA O ERRO: Define a estratégia de duplicatas para substituir
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE 
+
     manifest {
         attributes(
             'Premain-Class': 'NexuSkin.NxAgent',
@@ -48,6 +52,7 @@ task fatJar(type: Jar) {
             'Can-Retransform-Classes': 'true'
         )
     }
+    
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
