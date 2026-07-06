@@ -26,9 +26,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Run build
-        # Removi o 'cd agent' para evitar erro de pasta. 
-        # Se seus arquivos estiverem na raiz, use:
-        run: gradle shadowJar --no-daemon
+        run: gradle fatJar --no-daemon
 
       - name: Locate JAR
         id: jar
