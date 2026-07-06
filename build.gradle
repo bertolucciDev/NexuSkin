@@ -1,6 +1,5 @@
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 version = '1.0.0'
@@ -17,12 +16,16 @@ repositories {
 }
 
 dependencies {
-    // ASM (manipulação de bytecode) — versão estável mais recente
+    // Usamos 'compileOnly' porque o ASM será injetado via reflection ou 
+    // precisamos de um jar "fat" sem o shadowJar.
+    // Para evitar o erro do shadowJar, vamos usar a dependência normal e 
+    // criar um jar simples. 
     implementation 'org.ow2.asm:asm:9.7'
     implementation 'org.ow2.asm:asm-tree:9.7'
 }
 
 jar {
+    archiveFileName = 'nxagent.jar'
     manifest {
         attributes(
             'Premain-Class': 'NexuSkin.NxAgent',
@@ -34,11 +37,10 @@ jar {
     }
 }
 
-shadowJar {
-    archiveBaseName.set('nxagent')
-    archiveClassifier.set('')
-    archiveVersion.set('')
-    mergeServiceFiles()
+// Como não usamos ShadowJar, precisamos de um jeito de incluir o ASM dentro do JAR.
+// Vamos criar uma tarefa simples de "fatjar" manualmente.
+task fatJar(type: Jar) {
+    archiveFileName = 'nxagent.jar'
     manifest {
         attributes(
             'Premain-Class': 'NexuSkin.NxAgent',
@@ -46,6 +48,10 @@ shadowJar {
             'Can-Retransform-Classes': 'true'
         )
     }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with jar
 }
 
 compileJava {
