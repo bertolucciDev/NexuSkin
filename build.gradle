@@ -1,55 +1,68 @@
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 version = '1.0.0'
 group = 'com.nexuskin'
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
-}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    // ASM (manipulação de bytecode) — versão estável mais recente
-    implementation 'org.ow2.asm:asm:9.7'
-    implementation 'org.ow2.asm:asm-tree:9.7'
+    // ASM compilado em Java 7+ - compatível com Java 8 até Java 25
+    implementation 'org.ow2.asm:asm:9.5'
+    implementation 'org.ow2.asm:asm-tree:9.5'
 }
 
+compileJava {
+    // Bytecode Java 8: roda em QUALQUER Java (8, 11, 17, 21, 25+)
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-XDignore.symbol.file'
+}
+
+// JAR simples sem dependências (só as classes do NexuSkin)
 jar {
+    archiveFileName = 'nxagent-core.jar'
+    manifest {
+        attributes(
+            'Premain-Class': 'NexuSkin.NxAgent',
+            'Can-Redefine-Classes' : 'true',
+            'Can-Retransform-Classes' : 'true'
+        )
+    }
+}
+
+// FatJAR: todas as classes (NexuSkin + ASM) em um JAR único, 
+// sem module-info, compatível com qualquer JDK 8+
+task fatJar(type: Jar) {
+    archiveFileName = 'nxagent.jar'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    
+    // REMOVE TUDO que causa conflito de versão de JDK:
+    // module-info, MANIFESTs de sub-bibliotecas, assinaturas de certificados
+    exclude 'META-INF/**'
+    exclude 'module-info.class'
+    exclude '*.SF'
+    exclude '*.DSA'
+    exclude '*.RSA'
+    
     manifest {
         attributes(
             'Premain-Class': 'NexuSkin.NxAgent',
             'Can-Redefine-Classes': 'true',
             'Can-Retransform-Classes': 'true',
-            'Implementation-Title': 'NexuSkin Agent',
-            'Implementation-Version': project.version
+            'Main-Class': 'NexuSkin.NxAgent'
         )
     }
-}
-
-shadowJar {
-    archiveBaseName.set('nxagent')
-    archiveClassifier.set('')
-    archiveVersion.set('')
-    mergeServiceFiles()
-    manifest {
-        attributes(
-            'Premain-Class': 'NexuSkin.NxAgent',
-            'Can-Redefine-Classes': 'true',
-            'Can-Retransform-Classes': 'true'
-        )
+    
+    // Empacota todas as classes (suas + ASM) em um único jar limpo
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
     }
-}
-
-compileJava {
-    sourceCompatibility = '1.8'
-    targetCompatibility = '1.8'
-    options.encoding = 'UTF-8'
+    with jar
 }
