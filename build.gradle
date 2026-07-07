@@ -10,69 +10,47 @@ repositories {
 }
 
 dependencies {
-<<<<<<< HEAD
-    // ASM compilado em Java 7+ - compatível com Java 8 até Java 25
     implementation 'org.ow2.asm:asm:9.5'
     implementation 'org.ow2.asm:asm-tree:9.5'
-=======
-    // Usamos 'compileOnly' porque o ASM será injetado via reflection ou 
-    // precisamos de um jar "fat" sem o shadowJar.
-    // Para evitar o erro do shadowJar, vamos usar a dependência normal e 
-    // criar um jar simples. 
-    implementation 'org.ow2.asm:asm:9.7'
-    implementation 'org.ow2.asm:asm-tree:9.7'
->>>>>>> 9e0c2dfa731858919422d6fffe9e7d3c9f86b90f
 }
 
 compileJava {
-    // Bytecode Java 8: roda em QUALQUER Java (8, 11, 17, 21, 25+)
     sourceCompatibility = '1.8'
     targetCompatibility = '1.8'
     options.encoding = 'UTF-8'
     options.compilerArgs << '-XDignore.symbol.file'
 }
 
-// JAR simples sem dependências (só as classes do NexuSkin)
 jar {
-<<<<<<< HEAD
     archiveFileName = 'nxagent-core.jar'
     manifest {
         attributes(
-            'Premain-Class': 'NexuSkin.NxAgent',
+            'Premain-Class' : 'NexuSkin.NxAgent',
             'Can-Redefine-Classes' : 'true',
             'Can-Retransform-Classes' : 'true'
         )
     }
 }
 
-// FatJAR: todas as classes (NexuSkin + ASM) em um JAR único, 
-// sem module-info, compatível com qualquer JDK 8+
 task fatJar(type: Jar) {
     archiveFileName = 'nxagent.jar'
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    
-    // REMOVE TUDO que causa conflito de versão de JDK:
-    // module-info, MANIFESTs de sub-bibliotecas, assinaturas de certificados
+
     exclude 'META-INF/**'
     exclude 'module-info.class'
     exclude '*.SF'
     exclude '*.DSA'
     exclude '*.RSA'
-    
-=======
-    archiveFileName = 'nxagent.jar'
->>>>>>> 9e0c2dfa731858919422d6fffe9e7d3c9f86b90f
+
     manifest {
         attributes(
-            'Premain-Class': 'NexuSkin.NxAgent',
-            'Can-Redefine-Classes': 'true',
-            'Can-Retransform-Classes': 'true',
-            'Main-Class': 'NexuSkin.NxAgent'
+            'Premain-Class' : 'NexuSkin.NxAgent',
+            'Can-Redefine-Classes' : 'true',
+            'Can-Retransform-Classes' : 'true',
+            'Main-Class' : 'NexuSkin.NxAgent'
         )
     }
-<<<<<<< HEAD
-    
-    // Empacota todas as classes (suas + ASM) em um único jar limpo
+
     from {
         configurations.runtimeClasspath.collect {
             it.isDirectory() ? it : zipTree(it)
@@ -80,34 +58,3 @@ task fatJar(type: Jar) {
     }
     with jar
 }
-=======
-}
-
-// Como não usamos ShadowJar, precisamos de um jeito de incluir o ASM dentro do JAR.
-// Vamos criar uma tarefa simples de "fatjar" manualmente.
-task fatJar(type: Jar) {
-    archiveFileName = 'nxagent.jar'
-    
-    // SOLUÇÃO PARA O ERRO: Define a estratégia de duplicatas para substituir
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE 
-
-    manifest {
-        attributes(
-            'Premain-Class': 'NexuSkin.NxAgent',
-            'Can-Redefine-Classes': 'true',
-            'Can-Retransform-Classes': 'true'
-        )
-    }
-    
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-    with jar
-}
-
-compileJava {
-    sourceCompatibility = '1.8'
-    targetCompatibility = '1.8'
-    options.encoding = 'UTF-8'
-}
->>>>>>> 9e0c2dfa731858919422d6fffe9e7d3c9f86b90f
